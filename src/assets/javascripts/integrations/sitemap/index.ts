@@ -63,6 +63,49 @@ function resolve(url: URL, base: URL) {
 }
 
 /**
+ * Find root URL shared by all sitemap locations
+ *
+ * @param urls - Sitemap locations
+ *
+ * @returns Root URL, if the sitemap contains one
+ */
+function getRoot(urls: URL[]): URL | undefined {
+  if (!urls.length) return;
+  const root = urls.reduce((prev, next) => (
+    prev.pathname.length <= next.pathname.length ? prev : next
+  ));
+  const path = root.pathname.endsWith("/")
+    ? root.pathname
+    : `${root.pathname}/`;
+
+  return urls.every((url) => (
+    url.origin === root.origin &&
+    (url.pathname === root.pathname || url.pathname.startsWith(path))
+  )) ? root : undefined;
+}
+
+/**
+ * Rebase URL from canonical sitemap root to requested base URL
+ *
+ * @param url - URL
+ * @param root - Canonical sitemap root
+ * @param base - Requested base URL
+ *
+ * @returns Rebased URL
+ */
+function rebase(url: URL, root: URL, base: URL): URL {
+  const rootPath = root.pathname.endsWith("/")
+    ? root.pathname
+    : `${root.pathname}/`;
+  const path = url.pathname === root.pathname
+    ? ""
+    : url.pathname.slice(rootPath.length);
+  const target = new URL(base);
+  if (!target.pathname.endsWith("/")) target.pathname += "/";
+  return new URL(`${path}${url.search}${url.hash}`, target);
+}
+
+/**
  * Extract sitemap from document
  *
  * This function extracts the URLs and alternate links from the document, and
@@ -89,11 +132,21 @@ function resolve(url: URL, base: URL) {
  */
 function extract(document: Document, base: URL): Sitemap {
   const sitemap: Sitemap = new Map();
-  for (const el of getElements("url", document)) {
-    const url = getElement("loc", el);
+  const elements = getElements("url", document);
+  const locations = elements.map((el) => (
+    resolve(new URL(getElement("loc", el).textContent!), base)
+  ));
+  const root = getRoot(locations);
 
-    // Create entry for location and add it to the list of links
-    const links = [resolve(new URL(url.textContent!), base)];
+  for (let index = 0; index < elements.length; index++) {
+    const el = elements[index];
+
+    // Rebase canonical locations when the sitemap is served through an alias,
+    // e.g. a `mike` symlink, so navigation remains within the requested path.
+    const location = root
+      ? rebase(locations[index], root, base)
+      : locations[index];
+    const links = [location];
     sitemap.set(`${links[0]}`, links);
 
     // Attach alternate links to current entry
