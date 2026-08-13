@@ -31,6 +31,7 @@ import {
   catchError,
   combineLatestWith,
   concat,
+  concatMap,
   debounceTime,
   distinct,
   distinctUntilChanged,
@@ -258,21 +259,26 @@ function inject(next: Document): Observable<Document> {
   const container = getComponentElement("container")
   return concat(getElements("script", container))
     .pipe(
-      switchMap(el => {
+      concatMap(el => {
         const script = next.createElement("script")
-        if (el.src) {
-          for (const name of el.getAttributeNames())
-            script.setAttribute(name, el.getAttribute(name)!)
-          el.replaceWith(script)
+        for (const name of el.getAttributeNames())
+          script.setAttribute(name, el.getAttribute(name)!)
+        script.textContent = el.textContent
 
-          // Complete when script is loaded
+        if (el.src) {
+          // Insert scripts one at a time and wait for external resources, so
+          // dependent inline scripts execute in document order.
           return new Observable(observer => {
-            script.onload = () => observer.complete()
+            script.onload = script.onerror = () => observer.complete()
+            el.replaceWith(script)
+
+            return () => {
+              script.onload = script.onerror = null
+            }
           })
 
         // Complete immediately
         } else {
-          script.textContent = el.textContent
           el.replaceWith(script)
           return EMPTY
         }
