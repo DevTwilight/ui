@@ -44,6 +44,7 @@ import {
   observeOn,
   queueScheduler,
   share,
+  skip,
   startWith,
   switchMap,
   tap,
@@ -128,7 +129,7 @@ export function watchTooltip2(
   const active$ =
     combineLatest([
       watchElementFocus(el),
-      watchElementHover(el, timeout)
+      watchElementHover(el, timeout).pipe(skip(1))
     ])
       .pipe(
         map(([focus, hover]) => focus || hover),
@@ -212,6 +213,7 @@ export function mountTooltip2(
     // we use the queue scheduler, which will schedule synchronously in case the
     // tooltip should be shown, and asynchronously if it should be hidden.
     const node$ = show$.pipe(
+      skip(1),
       debounce(active => timer(+!active * 250, queueScheduler)),
       distinctUntilChanged(),
       switchMap(active => active ? content$ : EMPTY),
