@@ -144,11 +144,12 @@ export function watchTooltip2(
     defer(() => getElementContainers(el)).pipe(
       mergeMap(watchElementContentOffset),
       throttleTime(1),
-      // Note that we need to poll the value again if the active state changes,
-      // as otherwise the tooltip might be misplaced. This particularly happens
-      // when using third-party integrations like tablesort that change the
-      // position of elements – see https://t.ly/Y-V7X
+      // Note that we need to poll the value again when the tooltip becomes
+      // active, as otherwise it might be misplaced. We preserve the last valid
+      // offset when it becomes inactive, since its host might already be hidden
+      // while the tooltip is still fading out.
       combineLatestWith(active$),
+      filter(([_, active]) => active),
       map(() => getElementOffsetAbsolute(el)),
     )
 

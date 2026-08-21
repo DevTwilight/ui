@@ -160,8 +160,20 @@ export function mountPalette(
       // Set toggle visibility
       for (let index = 0; index < inputs.length; index++) {
         const label = inputs[index].nextElementSibling
-        if (label instanceof HTMLElement)
-          label.hidden = palette.index !== index
+        if (label instanceof HTMLElement) {
+          const hidden = palette.index !== index
+
+          // Hide the outgoing tooltip without fading into its replacement
+          if (hidden && !label.hidden) {
+            const id = label.getAttribute("aria-describedby")
+            if (id)
+              document.getElementById(id)?.style.setProperty(
+                "transition-duration", "0ms"
+              )
+          }
+
+          label.hidden = hidden
+        }
       }
 
       // Persist preference in local storage
