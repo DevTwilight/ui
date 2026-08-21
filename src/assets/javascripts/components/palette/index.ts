@@ -26,19 +26,20 @@
 import {
   Observable,
   Subject,
-  asyncScheduler,
+  animationFrames,
   defer,
   filter,
   finalize,
   fromEvent,
   map,
   mergeMap,
-  observeOn,
   of,
   repeat,
   shareReplay,
   skip,
   startWith,
+  switchMap,
+  take,
   takeUntil,
   tap,
   withLatestFrom
@@ -178,9 +179,10 @@ export function mountPalette(
         inputs[index].focus()
       })
 
-    // Update theme-color meta tag
+    // Update browser chrome after the palette has been rendered
     push$
       .pipe(
+        switchMap(() => animationFrames().pipe(skip(1), take(1))),
         map(() => {
           const header = getComponentElement("header")
           const style  = window.getComputedStyle(header)
@@ -192,13 +194,13 @@ export function mountPalette(
           return style.backgroundColor.match(/\d+/g)!
             .map(value => (+value).toString(16).padStart(2, "0"))
             .join("")
+        }),
+        finalize(() => {
+          document.body.removeAttribute("data-md-color-switching")
         })
       )
-        .subscribe(color => meta.content = `#${color}`)
-
-    // Revert transition durations after color switch
-    push$.pipe(observeOn(asyncScheduler))
-      .subscribe(() => {
+      .subscribe(color => {
+        meta.content = `#${color}`
         document.body.removeAttribute("data-md-color-switching")
       })
 
