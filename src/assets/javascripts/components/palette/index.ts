@@ -137,8 +137,6 @@ export function mountPalette(
   return defer(() => {
     const push$ = new Subject<Palette>()
     push$.subscribe(palette => {
-      document.body.setAttribute("data-md-color-switching", "")
-
       // Retrieve color palette for system preference
       if (palette.color.media === "(prefers-color-scheme)") {
         const media = matchMedia("(prefers-color-scheme: light)")
@@ -153,28 +151,41 @@ export function mountPalette(
         palette.color.accent  = input.getAttribute("data-md-color-accent")!
       }
 
-      // Set color palette
-      for (const [key, value] of Object.entries(palette.color))
-        document.body.setAttribute(`data-md-color-${key}`, value)
+      // Transfer hover state when replacing the palette toggle. Safari doesn't
+      // retarget a stationary pointer until it moves, leaving the old tooltip
+      // active and delaying the new one.
+      const current = inputs
+        .map(input => input.nextElementSibling)
+        .find(label => label instanceof HTMLElement && !label.hidden)
+      const next = inputs[palette.index].nextElementSibling
+      const hovered = current instanceof HTMLElement &&
+        current !== next && current.matches(":hover")
+
+      // Deactivate the outgoing tooltip before hiding its host
+      if (hovered) {
+        const id = current.getAttribute("aria-describedby")
+        if (id)
+          document.getElementById(id)?.style.setProperty(
+            "transition-duration", "0ms"
+          )
+        current.dispatchEvent(new MouseEvent("mouseleave"))
+      }
 
       // Set toggle visibility
       for (let index = 0; index < inputs.length; index++) {
         const label = inputs[index].nextElementSibling
-        if (label instanceof HTMLElement) {
-          const hidden = palette.index !== index
-
-          // Hide the outgoing tooltip without fading into its replacement
-          if (hidden && !label.hidden) {
-            const id = label.getAttribute("aria-describedby")
-            if (id)
-              document.getElementById(id)?.style.setProperty(
-                "transition-duration", "0ms"
-              )
-          }
-
-          label.hidden = hidden
-        }
+        if (label instanceof HTMLElement)
+          label.hidden = palette.index !== index
       }
+
+      // Activate the incoming tooltip after revealing its host
+      if (hovered && next instanceof HTMLElement)
+        next.dispatchEvent(new MouseEvent("mouseenter"))
+
+      // Set color palette without transitions
+      document.body.setAttribute("data-md-color-switching", "")
+      for (const [key, value] of Object.entries(palette.color))
+        document.body.setAttribute(`data-md-color-${key}`, value)
 
       // Persist preference in local storage
       __md_set("__palette", palette)
