@@ -29,7 +29,6 @@ import {
   Subject,
   defer,
   distinctUntilChanged,
-  filter,
   finalize,
   map,
   merge,
@@ -50,9 +49,12 @@ import {
  * ------------------------------------------------------------------------- */
 
 /**
- * Intersection observer entry subject
+ * Intersection observer subject registry
  */
-const entry$ = new Subject<IntersectionObserverEntry>()
+const registry = new WeakMap<
+  Element,
+  Set<Subject<IntersectionObserverEntry>>
+>()
 
 /**
  * Intersection observer observable
@@ -64,8 +66,12 @@ const entry$ = new Subject<IntersectionObserverEntry>()
  */
 const observer$ = defer(() => of(
   new IntersectionObserver(entries => {
-    for (const entry of entries)
-      entry$.next(entry)
+    for (const entry of entries) {
+      const subjects = registry.get(entry.target)
+      if (subjects)
+        for (const subject of subjects)
+          subject.next(entry)
+    }
   }, {
     threshold: 0
   })
@@ -93,17 +99,29 @@ const observer$ = defer(() => of(
 export function watchElementVisibility(
   el: HTMLElement
 ): Observable<boolean> {
-  return observer$
-    .pipe(
-      tap(observer => observer.observe(el)),
-      switchMap(observer => entry$
-        .pipe(
-          filter(({ target }) => target === el),
-          finalize(() => observer.unobserve(el)),
-          map(({ isIntersecting }) => isIntersecting)
-        )
-      )
+  return defer(() => {
+    const subject = new Subject<IntersectionObserverEntry>()
+    const subjects = registry.get(el) ||
+      new Set<Subject<IntersectionObserverEntry>>()
+    subjects.add(subject)
+    registry.set(el, subjects)
+    return observer$.pipe(
+      tap(observer => {
+        if (subjects.size === 1)
+          observer.observe(el)
+      }),
+      switchMap(observer => subject.pipe(
+        finalize(() => {
+          subjects.delete(subject)
+          if (subjects.size === 0) {
+            observer.unobserve(el)
+            registry.delete(el)
+          }
+        }),
+        map(({ isIntersecting }) => isIntersecting)
+      ))
     )
+  })
 }
 
 /**
