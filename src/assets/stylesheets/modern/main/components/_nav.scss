@@ -562,3 +562,10 @@
     }
   }
 }
+
+// Show post backlink title on desktop
+@include break-from-device(screen) {
+  .md-sidebar--post .md-post__back .md-nav__title {
+    display: block;
+  }
+}
