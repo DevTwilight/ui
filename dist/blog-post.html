@@ -12,7 +12,8 @@
             <div class="md-post__back">
               <div class="md-nav__title md-nav__container">
                 <a href="{{ page.parent.url | url }}" class="md-nav__link">
-                  {% include ".icons/material/arrow-left.svg" %}
+                  {% set icon = config.theme.icon.blog.back %}
+                  {% include ".icons/" ~ icon ~ ".svg" %}
                   <span class="md-ellipsis">
                     {{ lang.t("blog.index") }}
                   </span>
@@ -52,7 +53,8 @@
                   <ul class="md-nav__list">
                     <li class="md-nav__item">
                       <div class="md-nav__link">
-                        {% include ".icons/material/calendar.svg" %}
+                        {% set icon = config.theme.icon.blog.date %}
+                        {% include ".icons/" ~ icon ~ ".svg" %}
                         <time datetime="{{ page.config.date.created }}" class="md-ellipsis">
                           {{- page.config.date.created | date -}}
                         </time>
@@ -61,7 +63,8 @@
                     {% if page.config.date.updated %}
                       <li class="md-nav__item">
                         <div class="md-nav__link">
-                          {% include ".icons/material/calendar-clock.svg" %}
+                          {% set icon = config.theme.icon.blog.date_updated %}
+                          {% include ".icons/" ~ icon ~ ".svg" %}
                           <time datetime="{{ page.config.date.updated }}" class="md-ellipsis">
                             {{- page.config.date.updated | date -}}
                           </time>
@@ -71,7 +74,8 @@
                     {% if page.categories %}
                       <li class="md-nav__item">
                         <div class="md-nav__link">
-                          {% include ".icons/material/bookshelf.svg" %}
+                          {% set icon = config.theme.icon.blog.categories %}
+                          {% include ".icons/" ~ icon ~ ".svg" %}
                           <span class="md-ellipsis">
                             {{ lang.t("blog.categories.in") }}
                             {% for category in page.categories %}
@@ -88,7 +92,8 @@
                       {% set time = page.config.readtime %}
                       <li class="md-nav__item">
                         <div class="md-nav__link">
-                          {% include ".icons/material/clock-outline.svg" %}
+                          {% set icon = config.theme.icon.blog.readtime %}
+                          {% include ".icons/" ~ icon ~ ".svg" %}
                           <span class="md-ellipsis">
                             {% if time == 1 %}
                               {{ lang.t("readtime.one") }}
