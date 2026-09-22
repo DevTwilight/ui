@@ -29,7 +29,7 @@
 
 // Post variables
 :root {
-  --md-post-pin-icon: svg-load("material/pin.svg");
+  --md-post-pin-icon: svg-load("lucide/pin.svg");
 }
 
 // ----------------------------------------------------------------------------
@@ -63,7 +63,7 @@
     display: flex;
     flex-direction: column;
     gap: px2rem(12px);
-    margin: 0 px2rem(12px) px2rem(24px);
+    margin: 0 px2rem(20px) px2rem(24px);
   }
 
   // Post metadata
@@ -82,6 +82,7 @@
 
   // Post navigation title @todo - generalize
   &__title {
+    padding: px2rem(10px) px2rem(20px);
     font-weight: 700;
     color: var(--md-default-fg-color--light);
   }
@@ -118,6 +119,11 @@
       --md-scroll-margin: #{px2rem(120px)};
 
       margin-top: 0;
+
+      // Post title link
+      > .toclink {
+        text-decoration: none;
+      }
     }
   }
 
@@ -194,29 +200,108 @@
 // Sidebar for post
 .md-sidebar.md-sidebar--post {
 
+  // Open up the post sidebar
+  .md-post__back {
+    padding-bottom: px2rem(20px);
+    margin-bottom: px2rem(30px);
+
+    // Backlink
+    .md-nav__link {
+      padding-inline: 0;
+      margin-inline: 0;
+    }
+  }
+
+  // Post authors
+  .md-post__authors {
+    margin: 0 0 px2rem(34px);
+  }
+
+  // Post navigation title
+  .md-post__title {
+    padding: 0;
+    margin-bottom: px2rem(12px);
+    font-size: px2rem(12px);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  // Post metadata
+  .md-post__meta {
+
+    // Navigation link
+    .md-nav__link {
+      padding-block: px2rem(4px);
+      padding-inline: 0;
+      margin-inline: 0;
+
+      &:not([href], [for]) {
+        cursor: default;
+      }
+    }
+
+    // Following metadata section
+    + .md-post__meta {
+      padding-top: px2rem(28px);
+      margin-top: px2rem(28px);
+      border-top: px2rem(1px) solid var(--md-default-fg-color--lightest);
+    }
+  }
+
+  // Keep post links free of primary navigation highlights
+  .md-nav__link:is([href], [for]):is(:focus, :hover) {
+    color: var(--md-accent-fg-color);
+    background-color: transparent;
+  }
+
+  // [screen +]: Align the rail with the header and navigation tabs
+  @include break-from-device(screen) {
+
+    // Post navigation links
+    .md-post__back .md-nav__link,
+    .md-post__meta .md-nav__link {
+      padding-inline-start: px2rem(20px);
+    }
+
+    // Post authors
+    .md-post__authors {
+      margin-inline-start: px2rem(20px);
+    }
+
+    // Post navigation title
+    .md-post__title {
+      padding-inline-start: px2rem(20px);
+    }
+  }
+
   // [tablet -]: Adjust spacing
   @include break-to-device(tablet) {
     position: initial;
     width: 100%;
     padding: 0;
 
+    // Sidebar scroll wrapper
     .md-sidebar__scrollwrap {
       overflow: visible;
     }
 
+    // Sidebar inner wrapper
     .md-sidebar__inner {
       padding: 0;
     }
 
+    // Post metadata
     .md-post__meta {
       margin-inline: px2rem(12px);
     }
 
+    // Navigation item
     .md-nav__item {
       display: inline;
       border: none;
     }
 
+    // Navigation list
     .md-nav__list {
       display: inline-flex;
       flex-wrap: wrap;
@@ -224,14 +309,222 @@
       padding-block: px2rem(12px);
     }
 
+    // Navigation link
     .md-nav__link {
       padding: 0;
     }
 
+    // Navigation
     .md-nav {
       position: initial;
       height: auto;
       margin-bottom: 0;
+    }
+  }
+
+  // [tablet]: Arrange post information as a horizontal summary
+  @include break-at-device(tablet) {
+
+    // Primary navigation
+    .md-nav--primary {
+      display: grid;
+      gap: px2rem(28px);
+      align-items: start;
+      padding: 0 px2rem(16px) px2rem(24px);
+      margin: 0;
+    }
+
+    // Post authors
+    .md-post__authors {
+      margin: 0;
+    }
+
+    // Post metadata
+    .md-post__meta {
+      display: block;
+      padding: 0;
+      margin: 0;
+
+      // Metadata section
+      > .md-nav__item {
+        display: block;
+
+        // Metadata list
+        > .md-nav > .md-nav__list {
+          display: grid;
+          gap: px2rem(4px);
+          padding: 0;
+          margin: 0;
+
+          // Metadata item
+          > .md-nav__item {
+            display: block;
+            min-width: 0;
+          }
+        }
+      }
+
+      // Metadata link
+      .md-nav__link {
+        padding-block: px2rem(4px);
+      }
+
+      // Following metadata section
+      + .md-post__meta {
+        padding: 0;
+        margin: 0;
+        border: 0;
+      }
+    }
+  }
+
+  // [tablet portrait]: Keep authors above metadata and related links
+  @include break-at-device(tablet portrait) {
+
+    // Primary navigation
+    .md-nav--primary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    // Post authors
+    .md-post__authors {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(#{px2rem(180px)}, 1fr));
+      grid-column: 1 / -1;
+      gap: px2rem(16px);
+      padding-bottom: px2rem(24px);
+      border-bottom: px2rem(1px) solid var(--md-default-fg-color--lightest);
+    }
+  }
+
+  // [tablet landscape]: Keep all post information on one line
+  @include break-at-device(tablet landscape) {
+
+    // Primary navigation
+    .md-nav--primary {
+      grid-template-columns:
+        minmax(0, 0.9fr)
+        minmax(0, 1.35fr)
+        minmax(0, 1fr);
+    }
+  }
+
+  // [mobile -]: Present authors and metadata as a compact summary
+  @include break-to-device(mobile) {
+
+    // Post authors
+    .md-post__authors {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(#{px2rem(88px)}, 1fr));
+      gap: px2rem(14px);
+      padding-bottom: px2rem(24px);
+      margin: 0 px2rem(16px) px2rem(24px);
+      border-bottom: px2rem(1px) solid var(--md-default-fg-color--lightest);
+    }
+
+    // Post author profile
+    .md-post__profile {
+      flex-direction: column;
+      gap: px2rem(9px);
+      align-items: center;
+      text-align: center;
+
+      &:only-child {
+        flex-direction: row;
+        justify-self: start;
+        text-align: start;
+      }
+    }
+
+    // Post author avatar
+    .md-author--long {
+      width: px2rem(48px);
+      height: px2rem(48px);
+    }
+
+    // Post author description
+    .md-profile__description {
+      font-size: px2rem(12px);
+      line-height: 1.35;
+
+      strong {
+        display: block;
+        margin-bottom: px2rem(2px);
+        font-size: px2rem(13px);
+      }
+
+      br {
+        display: none;
+      }
+    }
+
+    // Post metadata
+    .md-post__meta {
+      display: block;
+      padding-block: 0;
+      margin-inline: px2rem(16px);
+
+      // Metadata section
+      > .md-nav__item {
+        display: block;
+
+        // Metadata list
+        > .md-nav > .md-nav__list {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: px2rem(4px) px2rem(18px);
+          padding-block: 0;
+          margin: 0;
+
+          // Metadata item
+          > .md-nav__item {
+            display: block;
+            min-width: 0;
+          }
+        }
+      }
+
+      // Metadata link
+      .md-nav__link {
+        gap: px2rem(9px);
+        padding-block: px2rem(5px);
+        font-size: px2rem(13px);
+      }
+
+      // Metadata text
+      .md-ellipsis {
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+      }
+
+      // Metadata icon
+      svg {
+        width: px2rem(18px);
+        height: px2rem(18px);
+      }
+
+      // Category metadata item
+      &:first-of-type
+        > .md-nav__item
+        > .md-nav
+        > .md-nav__list
+        > .md-nav__item:has(a) {
+        grid-column: 1 / -1;
+      }
+
+      // Related links
+      + .md-post__meta {
+        padding-top: px2rem(22px);
+        margin-top: px2rem(22px);
+
+        // Related links list
+        > .md-nav__item > .md-nav > .md-nav__list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: px2rem(8px) px2rem(22px);
+        }
+      }
     }
   }
 }
